@@ -83,9 +83,9 @@ func (p *Parser) HandleSection(section string, handler HandlerFunc) {
 	p.handlers[section] = append(p.handlers[section], handler)
 }
 
-// FilenameHandlerFunc says to the splitter what is the filename to be used
+// PathHandlerFunc says to the splitter what is the filename to be used
 // for a given path
-type FilenameHandlerFunc func(path string) (newpath string, err error)
+type PathHandlerFunc func(path string) (newpath string, err error)
 
 // Config has settings for the file splitter
 type Config struct {
@@ -96,7 +96,7 @@ type Config struct {
 	// FilenameFunc gets a path as in the source file and should return
 	// the destination path (later to be joined with the base
 	// directory)
-	FilenameHandler FilenameHandlerFunc
+	PathHandler PathHandlerFunc
 }
 
 // Splitter has the state of the splitter
@@ -130,8 +130,8 @@ func (s *Splitter) handler(section, afterline string) (io.WriteCloser, error) {
 		return nil, InvalidEntry
 	}
 
-	if s.Config.FilenameHandler != nil {
-		dest, err = s.Config.FilenameHandler(origDest)
+	if s.Config.PathHandler != nil {
+		dest, err = s.Config.PathHandler(origDest)
 		if err != nil {
 			return nil, err
 		}

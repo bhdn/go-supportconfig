@@ -207,7 +207,7 @@ func (cs *clientSuite) TestSplitterOneFile(c *C) {
 		gotPath = append(gotPath, path)
 		return path, nil
 	}
-	config := supportconfig.Config{Base: base, FilenameHandler: handler}
+	config := supportconfig.Config{Base: base, PathHandler: handler}
 	splitter := &supportconfig.Splitter{Config: config}
 
 	err := splitter.Split(strings.NewReader(sampleMultipleGroups))
@@ -236,7 +236,7 @@ func (cs *clientSuite) TestSplitterWithNote(c *C) {
 		gotPath = append(gotPath, path)
 		return path, nil
 	}
-	config := supportconfig.Config{Base: base, FilenameHandler: handler}
+	config := supportconfig.Config{Base: base, PathHandler: handler}
 	splitter := &supportconfig.Splitter{Config: config}
 
 	err := splitter.Split(strings.NewReader(logEntryWithNote))
@@ -262,7 +262,7 @@ func (cs *clientSuite) TestSplitterWithMaliciousPath(c *C) {
 		gotPath = append(gotPath, path)
 		return path, nil
 	}
-	config := supportconfig.Config{Base: base, FilenameHandler: handler}
+	config := supportconfig.Config{Base: base, PathHandler: handler}
 	splitter := &supportconfig.Splitter{Config: config}
 
 	err := splitter.Split(strings.NewReader(maliciousLogEntry))

@@ -27,6 +27,23 @@ func NewParser() *Parser {
 	return parser
 }
 
+// ScanLinesIgnoreCR doesn't strip CR as the default scanner does
+func ScanLinesIgnoreCR(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	if i := bytes.IndexByte(data, '\n'); i >= 0 {
+		// We have a full newline-terminated line.
+		return i + 1, data[0:i], nil
+	}
+	// If we're at EOF, we have a final, non-terminated line. Return it.
+	if atEOF {
+		return len(data), data, nil
+	}
+	// Request more data.
+	return 0, nil, nil
+}
+
 // Parse starts reading the source and triggers the events when sections
 // are matched.
 func (p *Parser) Parse(source io.Reader) error {
@@ -35,6 +52,7 @@ func (p *Parser) Parse(source io.Reader) error {
 
 	re := regexp.MustCompile(`#==\[ (.*?) \]=+`)
 	scanner := bufio.NewScanner(source)
+	scanner.Split(ScanLinesIgnoreCR)
 
 section:
 	for _, collector := range collectors {

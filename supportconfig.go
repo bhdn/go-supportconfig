@@ -158,6 +158,10 @@ func (s *Splitter) handler(section, afterline string) (io.WriteCloser, error) {
 	if err != nil {
 		return nil, err
 	}
+	f, err := os.Create(path)
+	if err != nil {
+		return nil, err
+	}
 
 	writer := bufio.NewWriter(f)
 	nop := &NopWriteCloser{f: f}

@@ -159,12 +159,21 @@ func (s *Splitter) handler(section, afterline string) (io.WriteCloser, error) {
 		return nil, err
 	}
 
-	f, err := os.Create(path)
-	if err != nil {
-		return nil, err
-	}
+	writer := bufio.NewWriter(f)
+	nop := &NopWriteCloser{f: f}
+	nop.Writer = *writer
 
-	return f, nil
+	return nop, nil
+}
+
+type NopWriteCloser struct {
+	bufio.Writer
+	f *os.File
+}
+
+func (n *NopWriteCloser) Close() error {
+	n.Flush()
+	return n.f.Close()
 }
 
 // Runs the splitter for a reable source

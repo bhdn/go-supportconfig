@@ -57,6 +57,10 @@ section:
 				collectors = make([]io.WriteCloser, 0)
 				for _, handler := range p.handlers[section] {
 					if collector, err := handler(section, afterSection); err != nil {
+						if err == SkipFile {
+							continue
+
+						}
 						return err
 					} else {
 						collectors = append(collectors, collector)
@@ -105,15 +109,20 @@ type Splitter struct {
 }
 
 var InvalidEntry = fmt.Errorf("Invalid entry in the source file")
+var SkipFile = fmt.Errorf("This file must be skipped")
 
-func afterlineToPath(afterline string) string {
-	if strings.HasSuffix(afterline, " Lines") {
+const FileNotFound = "File not found"
+
+func afterlineToPath(afterline string) (string, error) {
+	if idx := strings.LastIndex(afterline, FileNotFound); idx > -1 {
+		return "", SkipFile
+	} else if strings.HasSuffix(afterline, " Lines") {
 		idx := strings.LastIndex(afterline, " - ")
 		if idx > 0 {
 			afterline = afterline[:idx]
 		}
 	}
-	return afterline
+	return afterline, nil
 }
 
 func (s *Splitter) handler(section, afterline string) (io.WriteCloser, error) {
@@ -124,7 +133,10 @@ func (s *Splitter) handler(section, afterline string) (io.WriteCloser, error) {
 	if !strings.HasPrefix(afterline, prefix) {
 		return nil, InvalidEntry
 	}
-	origDest = afterlineToPath(afterline[len(prefix):])
+	origDest, err = afterlineToPath(afterline[len(prefix):])
+	if err != nil {
+		return nil, SkipFile
+	}
 	origDest = utils.CleanPath(origDest)
 	if origDest == "" {
 		return nil, InvalidEntry

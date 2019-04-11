@@ -250,6 +250,31 @@ func (cs *clientSuite) TestSplitterWithNote(c *C) {
 	c.Assert(string(b), Equals, logEntry+UglyExtraNewlines)
 }
 
+const logEntryNotFound = `
+#==[ Log File ]===============================#
+# /var/log/nodes/logname.log - File not found
+` + logEntry + UglyExtraNewlines
+
+func (cs *clientSuite) TestSplitterNotFound(c *C) {
+	base := c.MkDir()
+	gotPath := make([]string, 0)
+	handler := func(path string) (string, error) {
+		gotPath = append(gotPath, path)
+		return path, nil
+	}
+	config := supportconfig.Config{Base: base, PathHandler: handler}
+	splitter := &supportconfig.Splitter{Config: config}
+
+	err := splitter.Split(strings.NewReader(logEntryNotFound))
+	c.Assert(err, IsNil)
+
+	path := "/var/log/nodes/logname.log"
+	c.Assert(len(gotPath), Equals, 0)
+	_, err = ioutil.ReadFile(filepath.Join(base, path))
+	c.Assert(err, NotNil)
+	c.Assert(err, ErrorMatches, ".*no such file or directory.*")
+}
+
 const maliciousLogEntry = `
 #==[ Log File ]===============================#
 # /var/../../../../../.vimrc - Last 10000 Lines

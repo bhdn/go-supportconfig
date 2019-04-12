@@ -126,7 +126,6 @@ type Splitter struct {
 	Config Config
 }
 
-var InvalidEntry = fmt.Errorf("Invalid entry in the source file")
 var SkipFile = fmt.Errorf("This file must be skipped")
 
 const FileNotFound = "File not found"
@@ -149,7 +148,7 @@ func (s *Splitter) handler(section, afterline string) (io.WriteCloser, error) {
 
 	const prefix = "# "
 	if !strings.HasPrefix(afterline, prefix) {
-		return nil, InvalidEntry
+		return nil, SkipFile
 	}
 	origDest, err = afterlineToPath(afterline[len(prefix):])
 	if err != nil {
@@ -157,7 +156,7 @@ func (s *Splitter) handler(section, afterline string) (io.WriteCloser, error) {
 	}
 	origDest = utils.CleanPath(origDest)
 	if origDest == "" {
-		return nil, InvalidEntry
+		return nil, SkipFile
 	}
 
 	if s.Config.PathHandler != nil {

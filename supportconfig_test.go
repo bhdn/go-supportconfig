@@ -300,3 +300,28 @@ func (cs *clientSuite) TestSplitterWithMaliciousPath(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(string(b), Equals, logEntry+UglyExtraNewlines)
 }
+
+const ignoreLogFile = `
+#==[ Log File ]=====================================#
+# grep -i btrfs /var/log/messages - Last 500 Lines
+` + logEntry + UglyExtraNewlines
+
+func (cs *clientSuite) TestIgnoreLogFile(c *C) {
+	base := c.MkDir()
+	gotPath := make([]string, 0)
+	handler := func(path string) (string, error) {
+		gotPath = append(gotPath, path)
+		return "", nil
+	}
+	config := supportconfig.Config{Base: base, PathHandler: handler}
+	splitter := &supportconfig.Splitter{Config: config}
+
+	err := splitter.Split(strings.NewReader(ignoreLogFile))
+	c.Assert(err, IsNil)
+
+	path := "grep -i btrfs /var/log/messages"
+	c.Assert(len(gotPath), Equals, 1)
+	c.Assert(gotPath[0], Equals, path)
+	_, err = ioutil.ReadFile(filepath.Join(base, path))
+	c.Assert(err, Not(IsNil))
+}

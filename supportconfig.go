@@ -80,7 +80,7 @@ section:
 
 						}
 						return err
-					} else {
+					} else if collector != nil {
 						collectors = append(collectors, collector)
 					}
 				}
@@ -163,6 +163,10 @@ func (s *Splitter) handler(section, afterline string) (io.WriteCloser, error) {
 		dest, err = s.Config.PathHandler(origDest)
 		if err != nil {
 			return nil, err
+		} else if dest == "" {
+			// If the path handler function return empty string,
+			// the user wants to ignore this section
+			return nil, nil
 		}
 	} else {
 		dest = origDest
